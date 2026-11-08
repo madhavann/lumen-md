@@ -1,0 +1,10 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Anything a user might drop here while testing their own notes
+/_test-vault/
+/*.local.md

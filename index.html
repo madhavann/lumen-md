@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lumen MD — Markdown Vault Editor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/preview-themes.css">
+</head>
+<body>
+
+<div id="app" class="app">
+
+  <!-- Top toolbar -->
+  <header class="toolbar">
+    <div class="toolbar-group brand">
+      <span class="brand-mark">📝</span>
+      <span class="brand-name">Lumen MD</span>
+    </div>
+
+    <div class="toolbar-group">
+      <button id="btn-open-folder" class="btn" title="Open a folder as your vault">📂 Open Vault</button>
+      <button id="btn-new-file" class="btn" title="New markdown file (Ctrl+N)">＋ New</button>
+      <button id="btn-save" class="btn" title="Save (Ctrl+S)" disabled>💾 Save</button>
+      <span id="dirty-indicator" class="dirty-dot" hidden></span>
+    </div>
+
+    <div class="toolbar-group grow">
+      <span id="current-path" class="current-path">No file open</span>
+    </div>
+
+    <div class="toolbar-group">
+      <button id="btn-view-edit" class="btn seg" data-view="edit" title="Editor only">Edit</button>
+      <button id="btn-view-split" class="btn seg active" data-view="split" title="Split view">Split</button>
+      <button id="btn-view-preview" class="btn seg" data-view="preview" title="Preview only">Preview</button>
+    </div>
+
+    <div class="toolbar-group">
+      <label class="theme-pick" title="Editor color scheme">
+        🎨 Edit
+        <select id="select-editor-theme"></select>
+      </label>
+      <label class="theme-pick" title="Preview color scheme">
+        🖼️ Preview
+        <select id="select-preview-theme"></select>
+      </label>
+    </div>
+
+    <div class="toolbar-group">
+      <button id="btn-focus" class="btn icon-btn" title="Focus / typewriter mode (Ctrl+Shift+F)">🎯</button>
+      <button id="btn-history" class="btn icon-btn" title="Version history (Ctrl+H)">🕒</button>
+      <button id="btn-export" class="btn icon-btn" title="Export">📤</button>
+      <button id="btn-palette" class="btn icon-btn" title="Command palette (Ctrl+K)">⌘</button>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <!-- Left: file explorer -->
+    <aside id="sidebar-left" class="sidebar sidebar-left">
+      <div class="sidebar-head">
+        <span>VAULT</span>
+        <button id="btn-reconnect" class="btn tiny" title="Reconnect to last opened vault">↺</button>
+      </div>
+      <div id="file-tree" class="file-tree">
+        <p class="empty-hint">Open a folder to browse, edit &amp; save real Markdown files.</p>
+      </div>
+    </aside>
+
+    <!-- Resizer -->
+    <div class="resizer" id="resizer-left"></div>
+
+    <!-- Main editing area -->
+    <main class="workspace">
+      <div class="panes" id="panes">
+        <section id="pane-edit" class="pane pane-edit">
+          <div id="editor-host" class="editor-host"></div>
+        </section>
+        <div class="pane-divider" id="pane-divider"></div>
+        <section id="pane-preview" class="pane pane-preview">
+          <div id="preview-host" class="preview-host" data-preview-theme="github-dark">
+            <div class="preview markdown-body" id="preview-content">
+              <p class="empty-hint">Live preview will render here.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="statusbar">
+        <span id="stat-words">0 words</span>
+        <span id="stat-chars">0 chars</span>
+        <span id="stat-reading">0 min read</span>
+        <span id="stat-headings">0 headings</span>
+        <span class="grow"></span>
+        <span id="stat-autosave">autosave: off</span>
+        <span id="stat-saved">—</span>
+        <span id="stat-cursor">Ln 1, Col 1</span>
+      </footer>
+    </main>
+
+    <!-- Resizer -->
+    <div class="resizer" id="resizer-right"></div>
+
+    <!-- Right: outline / stats -->
+    <aside id="sidebar-right" class="sidebar sidebar-right">
+      <div class="sidebar-head"><span>OUTLINE</span></div>
+      <div id="outline-tree" class="outline-tree">
+        <p class="empty-hint">Headings appear here as you write.</p>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- Command palette -->
+<div id="palette-overlay" class="overlay" hidden>
+  <div class="palette">
+    <input id="palette-input" class="palette-input" placeholder="Type a file name or command…" autocomplete="off" />
+    <ul id="palette-results" class="palette-results"></ul>
+  </div>
+</div>
+
+<!-- History panel -->
+<div id="history-overlay" class="overlay" hidden>
+  <div class="history-panel">
+    <div class="history-head">
+      <span>Version History — <span id="history-file-name">—</span></span>
+      <button id="btn-history-close" class="btn tiny">✕</button>
+    </div>
+    <div class="history-body">
+      <ul id="history-list" class="history-list"></ul>
+      <div class="history-diff" id="history-diff"><p class="empty-hint">Select a snapshot to see what changed.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- Generic prompt modal (new file/folder/rename) -->
+<div id="prompt-overlay" class="overlay" hidden>
+  <div class="prompt-box">
+    <p id="prompt-label">Name</p>
+    <input id="prompt-input" autocomplete="off" />
+    <div class="prompt-actions">
+      <button id="prompt-cancel" class="btn">Cancel</button>
+      <button id="prompt-ok" class="btn primary">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu for file tree -->
+<ul id="context-menu" class="context-menu" hidden></ul>
+
+<div id="toast-host" class="toast-host"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
